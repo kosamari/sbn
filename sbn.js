@@ -1,7 +1,7 @@
 (function (global, factory) {
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
   typeof define === 'function' && define.amd ? define(factory) :
-  (global.SBN = factory());
+  (global.sbn = factory());
 }(this, (function () { 'use strict';
 
 // \s : matches any whitespace character (equal to [\r\n\t\f\v ])

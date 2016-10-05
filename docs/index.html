@@ -85,7 +85,7 @@
     })
     function draw(code) {
       try {
-        var tokens = SBN.lexer(code)
+        var tokens = sbn.lexer(code)
         $tokens.setValue(JSON.stringify(tokens, null, 2))
         $tokensMsg.innerText = 'Successfully Tokenized'
         $tokensMsg.className = 'message success'
@@ -98,10 +98,11 @@
         $svgastMsg.className = 'message error'
         $svgtextMsg.innerText = 'Error at Lexer'
         $svgtextMsg.className = 'message error'
+        return
       }
 
       try {
-        var sbnast = SBN.parser(tokens)
+        var sbnast = sbn.parser(tokens)
         $sbnast.setValue(JSON.stringify(sbnast, null, 2))
         $sbnastMsg.innerText = 'Successfully Parsed'
         $sbnastMsg.className = 'message success'
@@ -116,7 +117,7 @@
       }
 
       try {
-        var svgast = SBN.transformer(sbnast)
+        var svgast = sbn.transformer(sbnast)
         $svgast.setValue(JSON.stringify(svgast, null, 2))
         $svgastMsg.innerText = 'Successfully Transformed'
         $svgastMsg.className = 'message success'
@@ -129,7 +130,7 @@
       }
 
       try {
-        var svg = SBN.generator(svgast)
+        var svg = sbn.generator(svgast)
         $svgtext.setValue(svg)
         $svgcontainer.innerHTML = svg
         $svgtextMsg.innerText = 'Successfully Generated Code'

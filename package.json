@@ -4,7 +4,7 @@
   "description": "A compiler for small drawing language sbn(SVG by Numbers). Inspired by John Maeda's book: Design by Numbers.",
   "main": "sbn.js",
   "scripts": {
-    "build": "rollup ./src/compiler.js  -n SBN -f umd -o sbn.js"
+    "build": "rollup ./src/compiler.js  -n sbn -f umd -o sbn.js"
   },
   "author": "kosamari (http://twitter.com/kosamari)",
   "license": "Apache-2.0",
