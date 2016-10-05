@@ -5,14 +5,14 @@
   <meta name="description" content=">a small language to draw picture in SVG. This is a demo of sbn compiler. Made by @kosamari">
   <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.19.0/codemirror.min.css">
   <link rel="stylesheet" type="text/css" href="./sbn.css">
-  <script src="../sbn.js"></script>
+  <script src="./sbn.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.19.0/codemirror.min.js"></script>
 </head>
 <body>
   <header id="header" class="">
     <div>
       <h1>sbn.</h1>
-      <p> SVG by Numbers</p>
+      <p> SVG by Numbers <span id="version"></span></p>
     </div>
     <div>
       <p>a small language to draw picture in SVG. This is a demo of sbn compiler. Made by <a href="https://twitter.com/kosamari" title="author twitter account">@kosamari</a>. Code on <a href="https://github.com/kosamari/sbn" title="github link">github</a>.</p>
@@ -58,6 +58,7 @@
     </div>
   </div>
   <script type="text/javascript">
+    document.getElementById('version').innerText = 'Version '+sbn.VERSION
     var $svgcontainer = document.getElementById('svg-container')
     var $tokensMsg = document.getElementById('tokens-msg')
     var $sbnastMsg = document.getElementById('sbnast-msg')
