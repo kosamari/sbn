@@ -2,21 +2,32 @@
   // background: #222;
   // color:#fff
 }
+
 svg {
   height: 100%;
   width: 100%;
 }
 
 #header {
-  font-family: sans-serif;
+  font-family: Baskerville, 'Times New Roman', serif;
   padding:5px;
 }
 
+#header a {
+  color: #000;
+}
+
 #header h1{
+  font-size:2.5em;
   white-space: nowrap;
+  font-style: italic;
+  margin-right:20px;
+  margin-bottom:0px;
+  margin-top:10px;
 }
 
 #header p {
+  font-size:1em;
   margin: 0px;
 }
 
@@ -29,19 +40,14 @@ svg {
   align-items:baseline;
 }
 
-#header > div:first-child h1{
-  margin-right:20px;
-  margin-bottom:0px;
-}
 
 #header > div:first-child p{
-  font-weight: bold;
+  font-style: italic;
+  font-size: 1.5em;
 }
-
 
 #header > div:last-child p{
   margin:10px 0px;
-  font-size:0.9em;
 }
 
 #editor {
@@ -71,9 +77,9 @@ svg {
   font-size: 1.4em;
 }
 
-
 #process {
   display: flex;
+  font-family: Baskerville, 'Times New Roman', serif;
 }
 
 #process > div {
@@ -88,7 +94,6 @@ svg {
 }
 
 #process > div > h2 {
-  font-family: sans-serif;
   padding: 5px;
   overflow: scroll;
   white-space: nowrap;
