@@ -1,0 +1,118 @@
+* {
+  // background: #222;
+  // color:#fff
+}
+svg {
+  height: 100%;
+  width: 100%;
+}
+
+#header {
+  font-family: sans-serif;
+  padding:5px;
+}
+
+#header h1{
+  white-space: nowrap;
+}
+
+#header p {
+  margin: 0px;
+}
+
+#header > div {
+  margin-right:20px;
+}
+
+#header > div:first-child {
+  display: flex;
+  align-items:baseline;
+}
+
+#header > div:first-child h1{
+  margin-right:20px;
+  margin-bottom:0px;
+}
+
+#header > div:first-child p{
+  font-weight: bold;
+}
+
+
+#header > div:last-child p{
+  margin:10px 0px;
+  font-size:0.9em;
+}
+
+#editor {
+  display: flex;
+  border: 3px solid #cccccc;
+  border-bottom:none;
+}
+
+#svg-container {
+  width:50%;
+  max-width: 400px;
+  padding: 5px;
+  border-bottom:none;
+  border-right: none;
+}
+
+#code {
+  border-bottom:none;
+  border-left:none;
+  padding:5px;
+  width:100%;
+  min-height: 400px;
+}
+
+#code .CodeMirror {
+  height: 100%;
+  font-size: 1.4em;
+}
+
+
+#process {
+  display: flex;
+}
+
+#process > div {
+  width:25%;
+  border-top: 3px solid #cccccc;
+  border-left: 3px solid #cccccc;
+  border-bottom: 3px solid #cccccc;
+}
+
+#process > div:last-child {
+  border-right: 3px solid #cccccc;
+}
+
+#process > div > h2 {
+  font-family: sans-serif;
+  padding: 5px;
+  overflow: scroll;
+  white-space: nowrap;
+  font-size: 1.1em;
+  margin:0px;
+}
+
+#process .CodeMirror {
+  width:100%;
+}
+
+.error {
+  background-color: #e94c43;
+  color:#fff;
+}
+
+.success {
+  background-color: #3D9970;
+}
+
+.message {
+  font-family: sans-serif;
+  overflow: scroll;
+  white-space: nowrap;
+  padding:5px;
+  color: #fff;
+}

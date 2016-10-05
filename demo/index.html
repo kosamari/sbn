@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>sbn - SVG by Numbers</title>
+  <meta name="description" content=">a small language to draw picture in SVG. This is a demo of sbn compiler. Made by @kosamari">
+  <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.19.0/codemirror.min.css">
+  <link rel="stylesheet" type="text/css" href="./sbn.css">
+  <script src="../sbn.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.19.0/codemirror.min.js"></script>
+</head>
+<body>
+  <header id="header" class="">
+    <div>
+      <h1>sbn.</h1>
+      <p> SVG by Numbers</p>
+    </div>
+    <div>
+      <p>a small language to draw picture in SVG. This is a demo of sbn compiler. Made by <a href="https://twitter.com/kosamari" title="author twitter account">@kosamari</a>. Code on <a href="https://github.com/kosamari/sbn" title="github link">github</a>.</p>
+    </div>
+  </header><!-- /header -->
+  <div id="editor">
+    <div id="svg-container" ></div>
+    <div id="code"></div>
+    <div>
+      <svg width="50" height="420" xmlns="http://www.w3.org/2000/svg" >
+        <defs>
+          <linearGradient id="gradient"  x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%"  stop-color="white"/>
+            <stop offset="100%" stop-color="black"/>
+          </linearGradient>
+        </defs>
+        <rect fill="url(#gradient)" x="0" y="0" width="50" height="420"/>
+        <text x="4" y="15" font-family="Verdana" font-size="12">100</text>
+        <text x="11" y="410" font-family="Verdana" font-size="12" style="fill:#fff">0</text>
+      </svg>
+    </div>
+  </div>
+  <div id="process">
+    <div>
+      <h2>Tokens</h2>
+      <div id="tokens-msg" class="message success">test</div>
+      <div id="tokens"></div>
+    </div>
+    <div>
+      <h2>Parsed AST</h2>
+      <div id="sbnast-msg" class="message"></div>
+      <div id="sbnast"></div>
+    </div>
+    <div>
+      <h2>Transformed AST</h2>
+      <div id="svgast-msg" class="message"></div>
+      <div id="svgast"></div>
+    </div>
+    <div>
+      <h2>Generated Code</h2>
+      <div id="svgtext-msg" class="message"></div>
+      <div id="svgtext"></div>
+    </div>
+  </div>
+  <script type="text/javascript">
+    var $svgcontainer = document.getElementById('svg-container')
+    var $tokensMsg = document.getElementById('tokens-msg')
+    var $sbnastMsg = document.getElementById('sbnast-msg')
+    var $svgastMsg = document.getElementById('svgast-msg')
+    var $svgtextMsg = document.getElementById('svgtext-msg')
+    var $editor = CodeMirror(document.getElementById('code'), {
+      value: 'Paper 95\nPen 1\nLine 50 15 85 80\nPen 30\nLine 85 80 15 80\nPen 70\nLine 15 80 50 15',
+      lineNumbers: true
+    })
+    var $tokens = CodeMirror(document.getElementById('tokens'), {
+      lineNumbers: true,
+      readOnly: true
+    })
+    var $sbnast = CodeMirror(document.getElementById('sbnast'), {
+      lineNumbers: true,
+      readOnly: true
+    })
+    var $svgast = CodeMirror(document.getElementById('svgast'), {
+      lineNumbers: true,
+      readOnly: true
+    })
+    var $svgtext = CodeMirror(document.getElementById('svgtext'), {
+      lineNumbers: true,
+      readOnly: true
+    })
+    function draw(code) {
+      try {
+        var tokens = SBN.lexer(code)
+        $tokens.setValue(JSON.stringify(tokens, null, 2))
+        $tokensMsg.innerText = 'Successfully Tokenized'
+        $tokensMsg.className = 'message success'
+      } catch (e) {
+        $tokensMsg.innerText = e
+        $tokensMsg.className = 'message error'
+        $sbnastMsg.innerText = 'Error at Lexer'
+        $sbnastMsg.className = 'message error'
+        $svgastMsg.innerText = 'Error at Lexer'
+        $svgastMsg.className = 'message error'
+        $svgtextMsg.innerText = 'Error at Lexer'
+        $svgtextMsg.className = 'message error'
+      }
+
+      try {
+        var sbnast = SBN.parser(tokens)
+        $sbnast.setValue(JSON.stringify(sbnast, null, 2))
+        $sbnastMsg.innerText = 'Successfully Parsed'
+        $sbnastMsg.className = 'message success'
+      } catch (e) {
+        $sbnastMsg.innerText = e
+        $sbnastMsg.className = 'message error'
+        $svgastMsg.innerText = 'Error at Parser'
+        $svgastMsg.className = 'message error'
+        $svgtextMsg.innerText = 'Error at Parser'
+        $svgtextMsg.className = 'message error'
+        return
+      }
+
+      try {
+        var svgast = SBN.transformer(sbnast)
+        $svgast.setValue(JSON.stringify(svgast, null, 2))
+        $svgastMsg.innerText = 'Successfully Transformed'
+        $svgastMsg.className = 'message success'
+      } catch (e) {
+        $svgastMsg.innerText = e
+        $svgastMsg.className = 'message error'
+        $svgtextMsg.innerText = 'Error at Transformer'
+        $svgtextMsg.className = 'message error'
+        return
+      }
+
+      try {
+        var svg = SBN.generator(svgast)
+        $svgtext.setValue(svg)
+        $svgcontainer.innerHTML = svg
+        $svgtextMsg.innerText = 'Successfully Generated Code'
+        $svgtextMsg.className = 'message success'
+      } catch (e) {
+        $svgtextMsg.innerText = e
+        $svgtextMsg.className = 'message error'
+        return
+      }
+    }
+
+    $editor.on("update", function(e, cm) {
+      draw($editor.getValue())
+    })
+
+    // initial load
+    draw($editor.getValue())
+  </script>
+</body>
+</html>
