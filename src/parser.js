@@ -1,14 +1,22 @@
 // \s : matches any whitespace character (equal to [\r\n\t\f\v ])
 //  + : match previous condition for one and unlimited times
 export function lexer (code) {
-  var _tokens = code.replace(/[\n\r]/g, ' [nl] ').split(/[\t\f\v ]+/)
+  var _tokens = code
+                  .replace(/[\n\r]/g, ' *nl* ')
+                  .replace(/\[/g, ' *ob* ')
+                  .replace(/\]/g, ' *cb* ')
+                  .split(/[\t\f\v ]+/)
   var tokens = []
   for (var i = 0; i < _tokens.length; i++) {
     var t = _tokens[i]
     if(t.length <= 0 || isNaN(t)) {
-      if (t === '[nl]') {
+      if (t === '*nl*') {
         tokens.push({type: 'newline'})
-      }else if(t.length > 0) {
+      } else if (t === '*ob*') {
+        tokens.push({type: 'open bracket'})
+      } else if (t === '*cb*') {
+        tokens.push({type: 'close bracket'})
+      } else if(t.length > 0) {
         tokens.push({type: 'word', value: t})
       }
     } else {
@@ -24,26 +32,64 @@ export function lexer (code) {
 }
 
 export function parser (tokens) {
+  function expectedTypeCheck (type, expect) {
+    if(Array.isArray(expect)) {
+      var i = expect.indexOf(type)
+      return i >= 0
+    }
+    return type === expect
+  }
+
+  function createDot (current_token, currentPosition, node) {
+    var expectedType = ['open bracket', 'number', 'number', 'close bracket']
+    var expectedLength = 4
+    currentPosition = currentPosition || 0
+    node = node || {type: 'dot'}
+
+    if (currentPosition < expectedLength - 1) {
+      if (expectedTypeCheck(current_token.type, expectedType[currentPosition])){
+        if(currentPosition === 1) {
+          node.x = current_token.value
+        }
+        if(currentPosition === 2) {
+          node.y = current_token.value
+        }
+        currentPosition++
+        createDot(tokens.shift(), currentPosition, node)
+      } else {
+        throw 'Expected ' + expectedType[currentPosition] + ' but found ' + current_token.type + '.'
+      }
+    }
+    return node
+  }
 
   function findArguments(command, expectedLength, expectedType, currentPosition, currentList) {
     currentPosition = currentPosition || 0
     currentList = currentList || []
     while (expectedLength > currentPosition) {
       var token = tokens.shift()
-      var expected = typeof expectedType === 'object' ? expectedType[currentPosition] : null
       if (!token) {
         throw command + ' takes ' + expectedLength + ' argument(s). '
       }
-      if (expected && token.type !== expected) {
-        throw command + ' takes ' + expected + ' as argument ' + (currentPosition + 1) + '. ' + (token ? 'Instead found a ' + token.type + ' '+ (token.value || '') + '.' : '')
+
+      if (expectedType){
+        var expected = expectedTypeCheck(token.type, expectedType[currentPosition])
+        if (!expected) {
+          throw command + ' takes ' + JSON.stringify(expectedType[currentPosition]) + ' as argument ' + (currentPosition + 1) + '. ' + (token ? 'Instead found a ' + token.type + ' '+ (token.value || '') + '.' : '')
+        }
+        if (token.type === 'number' && (token.value < 0 || token.value > 100)){
+          throw 'Found value ' + token.value + ' for ' + command + '. Value must be between 0 - 100.'
+        }
       }
-      if (token.type === 'number' && (token.value < 0 || token.value > 100)){
-        throw 'Found value ' + token.value + ' for ' + command + '. Value must be between 0 - 100.'
-      }
-      currentList.push({
+
+      var arg = {
         type: token.type,
         value: token.value
-      })
+      }
+      if (token.type === 'open bracket') {
+        arg = createDot(token)
+      }
+      currentList.push(arg)
       currentPosition++
     }
     return currentList
@@ -116,18 +162,36 @@ export function parser (tokens) {
           AST.body.push(expression)
           break
         case 'Set':
-          var args = findArguments('Set', 2, ['word', 'number'])
-          var declaration = {
-            type: 'VariableDeclaration',
-            name: 'Set',
-            identifier: args[0],
-            value: args[1],
+          var args = findArguments('Set', 2, [['word', 'open bracket'], 'number'])
+          var obj = {}
+          if (args[0].type === 'dot') {
+            AST.body.push({
+              type: 'CallExpression',
+              name: 'Pen',
+              arguments:[args[1]]
+            })
+            obj.type = 'CallExpression',
+            obj.name = 'Line',
+            obj.arguments = [
+              { type: 'number', value: args[0].x},
+              { type: 'number', value: args[0].y},
+              { type: 'number', value: args[0].x},
+              { type: 'number', value: args[0].y}
+            ]
+          } else {
+            obj.type = 'VariableDeclaration'
+            obj.name = 'Set'
+            obj.identifier = args[0]
+            obj.value = args[1]
           }
-          AST.body.push(declaration)
+
+          AST.body.push(obj)
           break
         default:
           throw current_token.value + ' is not a valid command'
       }
+    } else if (current_token.type !== 'newline') {
+      throw 'Unexpected token type : ' + current_token.type
     }
   }
 
