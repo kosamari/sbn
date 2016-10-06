@@ -1,6 +1,6 @@
 {
   "name": "sbn",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "A compiler for small drawing language sbn(SVG by Numbers). Inspired by John Maeda's book: Design by Numbers.",
   "main": "sbn.js",
   "scripts": {

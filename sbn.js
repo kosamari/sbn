@@ -247,7 +247,7 @@ function generator (ast) {
 
 var SBN = {}
 
-SBN.VERSION = '0.2.2'
+SBN.VERSION = '0.2.3'
 SBN.lexer = lexer
 SBN.parser = parser
 SBN.transformer = transformer
