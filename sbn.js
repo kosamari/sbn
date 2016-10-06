@@ -87,10 +87,12 @@ function parser (tokens) {
           break
         case 'Line':
           if(!paper) {
-            throw 'Please define Paper before drawing Line'
+            // throw 'Please make Paper 1st'
+            // TODO : no error message 'You should make paper first'
           }
           if(!pen) {
-            throw 'Please define Pen before drawing Line'
+            // throw 'Please define Pen 1st'
+            // TODO : no error message 'You should set pen color first'
           }
           var expression = {
             type: 'CallExpression',
@@ -113,6 +115,8 @@ function parser (tokens) {
 function transformer (ast) {
 
   function makeColor (level) {
+    level = level || 100
+    level = 100 - level
     return 'rgb(' + level + '%, ' + level + '%, ' + level + '%)'
   }
 
@@ -158,6 +162,7 @@ function transformer (ast) {
   }
 
   var current_pen_color
+  var paper_color
 
   while (ast.body.length > 0) {
     var node = ast.body.shift()
@@ -170,7 +175,8 @@ function transformer (ast) {
           throw node.name + ' is not a valid command.'
         }
         if (typeof !current_pen_color === 'undefined') {
-          throw 'Please define Pen before drawing Line.'
+          // throw 'Please define Pen before drawing Line.'
+          // TODO : message 'You should define Pen before drawing Line'
         }
         newAST.body.push(el(node.arguments, current_pen_color))
       }
