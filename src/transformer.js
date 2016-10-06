@@ -1,6 +1,8 @@
 export function transformer (ast) {
 
   function makeColor (level) {
+    level = level || 100
+    level = 100 - level
     return 'rgb(' + level + '%, ' + level + '%, ' + level + '%)'
   }
 
@@ -46,6 +48,7 @@ export function transformer (ast) {
   }
 
   var current_pen_color
+  var paper_color
 
   while (ast.body.length > 0) {
     var node = ast.body.shift()
@@ -58,7 +61,8 @@ export function transformer (ast) {
           throw node.name + ' is not a valid command.'
         }
         if (typeof !current_pen_color === 'undefined') {
-          throw 'Please define Pen before drawing Line.'
+          // throw 'Please define Pen before drawing Line.'
+          // TODO : message 'You should define Pen before drawing Line'
         }
         newAST.body.push(el(node.arguments, current_pen_color))
       }
