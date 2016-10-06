@@ -12,10 +12,11 @@ export function transformer (ast) {
         tag: 'line',
         attr: {
           x1: param[0].value,
-          y1: param[1].value,
+          y1: 100 - param[1].value,
           x2: param[2].value,
-          y2: param[3].value,
-          stroke: makeColor(pen_color_value)
+          y2: 100 - param[3].value,
+          stroke: makeColor(pen_color_value),
+          'stroke-linecap': 'square'
         },
         body: []
       }
