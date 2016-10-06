@@ -7,18 +7,48 @@
 // \s : matches any whitespace character (equal to [\r\n\t\f\v ])
 //  + : match previous condition for one and unlimited times
 function lexer (code) {
-  var tokens = code.split(/\s+/)
-  if (tokens.length)
-  return tokens.map(function (word) {
-    var parsed = parseInt(word, 10)
-    if(isNaN(parsed)) {
-      return {type: 'word', value: word}
+  var _tokens = code.split(/\s+/)
+  var tokens = []
+
+  for (var i = 0; i < _tokens.length; i++) {
+    if(isNaN(_tokens[i])) {
+      if(_tokens[i].length > 0) {
+        tokens.push({type: 'word', value: _tokens[i]})
+      }
+    } else {
+      tokens.push({type: 'number', value: _tokens[i]})
     }
-    return {type: 'number', value: parsed}
-  })
+  }
+
+  if (tokens.length < 1) {
+    throw 'No Tokens Found. Try "Paper 10"'
+  }
+
+  return tokens
 }
 
 function parser (tokens) {
+
+  function findArguments(expressionType, expectedLength, currentPosition, currentList) {
+    currentPosition = currentPosition || 0
+    currentList = currentList || []
+    while (expectedLength > currentPosition) {
+      var token = tokens.shift()
+      if(!token || token.type === 'word') {
+        throw expressionType + ' takes ' + expectedLength + ' number(s) as argument.' + (token ? 'Instead found a word "' + token.value + '".' : '')
+      }
+      if(token.value < 0 || token.value > 100){
+        throw 'Found value ' + token.value + ' for ' + expressionType + '. Value must be between 0 - 100.'
+      }
+      currentList.push({
+          type: 'NumberLiteral',
+          value: token.value
+      })
+      currentPosition++
+    }
+    return currentList
+  }
+
   var AST = {
     type: 'Drawing',
     body: []
@@ -32,25 +62,17 @@ function parser (tokens) {
       switch (current_token.value) {
         case 'Paper' :
           if (paper) {
-            throw 'can not define paper more than once'
+            throw 'You can not define Paper more than once'
           }
           var expression = {
             type: 'CallExpression',
             name: 'Paper',
             arguments: []
           }
-          // if Paper, next token should be color argument
-          var argument = tokens.shift()
-          if(argument.type === 'number') {
-            expression.arguments.push({
-              type: 'NumberLiteral',
-              value: argument.value
-            })
-            AST.body.push(expression)
-            paper = true
-          } else {
-            throw 'expected number'
-          }
+          var args = findArguments('Paper', 1)
+          expression.arguments = expression.arguments.concat(args)
+          AST.body.push(expression)
+          paper = true
           break
         case 'Pen' :
           var expression = {
@@ -58,48 +80,33 @@ function parser (tokens) {
             name: 'Pen',
             arguments: []
           }
-          // if Paper, next token should be 
-          var argument = tokens.shift()
-          if(argument.type === 'number') {
-            expression.arguments.push({
-              type: 'NumberLiteral',
-              value: argument.value
-            })
-            AST.body.push(expression)
-            pen = true
-          } else {
-            throw 'expected number'
-          }
+          var args = findArguments('Pen', 1)
+          expression.arguments = expression.arguments.concat(args)
+          AST.body.push(expression)
+          pen = true
           break
         case 'Line':
           if(!paper) {
-            throw 'paper is not defined yet'
+            throw 'Please define Paper before drawing Line'
           }
           if(!pen) {
-            throw 'pen is not defined yet'
+            throw 'Please define Pen before drawing Line'
           }
           var expression = {
             type: 'CallExpression',
             name: 'Line',
             arguments: []
           }
-          // if Paper, next token should be
-          for (var i = 0; i < 4; i++) {
-            var argument = tokens.shift()
-            if(argument.type === 'number') {
-              expression.arguments.push({
-                type: 'NumberLiteral',
-                value: argument.value
-              })
-            } else {
-              throw 'expected number'
-            }
-          }
+          var args = findArguments('Line', 4)
+          expression.arguments = expression.arguments.concat(args)
           AST.body.push(expression)
           break
+        default:
+          throw current_token.value + ' is not a valid command'
       }
     }
   }
+
   return AST
 }
 
@@ -158,7 +165,14 @@ function transformer (ast) {
       if(node.name === 'Pen') {
         current_pen_color = node.arguments[0].value
       } else {
-        newAST.body.push(elements[node.name](node.arguments, current_pen_color))
+        var el = elements[node.name]
+        if (!el) {
+          throw node.name + ' is not a valid command.'
+        }
+        if (typeof !current_pen_color === 'undefined') {
+          throw 'Please define Pen before drawing Line.'
+        }
+        newAST.body.push(el(node.arguments, current_pen_color))
       }
     }
   }
@@ -168,29 +182,51 @@ function transformer (ast) {
 
 function generator (ast) {
 
-  function tagMaker (node) {
-    var attributes = Object.keys(node.attr).map(function (key){
-      return key+'="'+node.attr[key]+'"'
-    }).join(' ')
-    return {
-      open:'<'+node.tag+' '+attributes+'>',
-      close:'</'+node.tag+'>'
+  function traverseSvgAst(obj, parent, rest, text) {
+    parent = parent || []
+    rest = rest || []
+    text = text || ''
+    if (!Array.isArray(obj)) {
+      obj = [obj]
     }
+
+    while (obj.length > 0) {
+      var currentNode = obj.shift()
+      var body = currentNode.body || ''
+      var attr = Object.keys(currentNode.attr).map(function (key){
+        return key + '="' + currentNode.attr[key] + '"'
+      }).join(' ')
+
+      text += parent.map(function(){return '\t'}).join('') + '<' + currentNode.tag + ' ' + attr + '>'
+
+      if (currentNode.body && Array.isArray(currentNode.body) && currentNode.body.length > 0) {
+        text += '\n'
+        parent.push(currentNode.tag)
+        rest.push(obj)
+        return traverseSvgAst(currentNode.body, parent, rest, text)
+      }
+
+      text += body + '</'+ currentNode.tag +'>\n'
+    }
+
+    while (rest.length > 0) {
+      var next = rest.pop()
+      var tag = parent.pop()
+      text += parent.map(function(){return '\t'}).join('') + '</'+ tag +'>\n'
+      if (next.length > 0) {
+        traverseSvgAst(next, parent, rest, text)
+      }
+    }
+
+    return text
   }
 
-  var svg = tagMaker(ast) // top node should always be <svg>
-
-  var elements = ast.body.map(function (node) {
-    var el = tagMaker(node)
-    return el.open + el.close
-  }).join('\n\t')
-
-  return svg.open + '\n\t' + elements + '\n' + svg.close
+  return traverseSvgAst(ast)
 }
 
 var SBN = {}
 
-SBN.VERSION = '0.0.1'
+SBN.VERSION = '0.0.2'
 SBN.lexer = lexer
 SBN.parser = parser
 SBN.transformer = transformer
