@@ -1,16 +1,18 @@
 // \s : matches any whitespace character (equal to [\r\n\t\f\v ])
 //  + : match previous condition for one and unlimited times
 export function lexer (code) {
-  var _tokens = code.split(/\s+/)
+  var _tokens = code.replace(/[\n\r]/g, ' [nl] ').split(/[\t\f\v ]+/)
   var tokens = []
-
   for (var i = 0; i < _tokens.length; i++) {
-    if(isNaN(_tokens[i])) {
-      if(_tokens[i].length > 0) {
-        tokens.push({type: 'word', value: _tokens[i]})
+    var t = _tokens[i]
+    if(t.length <= 0 || isNaN(t)) {
+      if (t === '[nl]') {
+        tokens.push({type: 'newline'})
+      }else if(t.length > 0) {
+        tokens.push({type: 'word', value: t})
       }
     } else {
-      tokens.push({type: 'number', value: _tokens[i]})
+      tokens.push({type: 'number', value: t})
     }
   }
 
@@ -54,6 +56,18 @@ export function parser (tokens) {
     var current_token = tokens.shift()
     if (current_token.type === 'word') {
       switch (current_token.value) {
+        case '//' :
+          var expression = {
+            type: 'CommentExpression',
+            value: ''
+          }
+          var next = tokens.shift()
+          while (next.type !== 'newline') {
+            expression.value += next.value + ' '
+            next = tokens.shift()
+          }
+          AST.body.push(expression)
+          break
         case 'Paper' :
           if (paper) {
             throw 'You can not define Paper more than once'
