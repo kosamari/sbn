@@ -5,6 +5,8 @@ export function lexer (code) {
                   .replace(/[\n\r]/g, ' *nl* ')
                   .replace(/\[/g, ' *ob* ')
                   .replace(/\]/g, ' *cb* ')
+                  .replace(/\{/g, ' *ocb* ')
+                  .replace(/\}/g, ' *ccb* ')
                   .split(/[\t\f\v ]+/)
   var tokens = []
   for (var i = 0; i < _tokens.length; i++) {
@@ -16,6 +18,10 @@ export function lexer (code) {
         tokens.push({type: 'open bracket'})
       } else if (t === '*cb*') {
         tokens.push({type: 'close bracket'})
+      } else if (t === '*ocb*') {
+        tokens.push({type: 'open curly brace'})
+      } else if (t === '*ccb*') {
+        tokens.push({type: 'close curly brace'})
       } else if(t.length > 0) {
         tokens.push({type: 'word', value: t})
       }
@@ -95,6 +101,11 @@ export function parser (tokens) {
     return currentList
   }
 
+  function findBlockElements(currentToken) {
+    
+  }
+
+
   var AST = {
     type: 'Drawing',
     body: []
@@ -106,6 +117,14 @@ export function parser (tokens) {
     var current_token = tokens.shift()
     if (current_token.type === 'word') {
       switch (current_token.value) {
+        case '{' :
+          var body = findBlockElements(current_token)
+          var block = {
+            type: 'Block',
+            body : body
+          }
+          AST.body.push(block)
+          break
         case '//' :
           var expression = {
             type: 'CommentExpression',
