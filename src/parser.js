@@ -25,20 +25,24 @@ export function lexer (code) {
 
 export function parser (tokens) {
 
-  function findArguments(expressionType, expectedLength, currentPosition, currentList) {
+  function findArguments(command, expectedLength, expectedType, currentPosition, currentList) {
     currentPosition = currentPosition || 0
     currentList = currentList || []
     while (expectedLength > currentPosition) {
       var token = tokens.shift()
-      if(!token || token.type === 'word') {
-        throw expressionType + ' takes ' + expectedLength + ' number(s) as argument.' + (token ? 'Instead found a word "' + token.value + '".' : '')
+      var expected = typeof expectedType === 'object' ? expectedType[currentPosition] : null
+      if (!token) {
+        throw command + ' takes ' + expectedLength + ' argument(s). '
       }
-      if(token.value < 0 || token.value > 100){
-        throw 'Found value ' + token.value + ' for ' + expressionType + '. Value must be between 0 - 100.'
+      if (expected && token.type !== expected) {
+        throw command + ' takes ' + expected + ' as argument ' + (currentPosition + 1) + '. ' + (token ? 'Instead found a ' + token.type + ' '+ (token.value || '') + '.' : '')
+      }
+      if (token.type === 'number' && (token.value < 0 || token.value > 100)){
+        throw 'Found value ' + token.value + ' for ' + command + '. Value must be between 0 - 100.'
       }
       currentList.push({
-          type: 'NumberLiteral',
-          value: token.value
+        type: token.type,
+        value: token.value
       })
       currentPosition++
     }
@@ -110,6 +114,16 @@ export function parser (tokens) {
           var args = findArguments('Line', 4)
           expression.arguments = expression.arguments.concat(args)
           AST.body.push(expression)
+          break
+        case 'Set':
+          var args = findArguments('Set', 2, ['word', 'number'])
+          var declaration = {
+            type: 'VariableDeclaration',
+            name: 'Set',
+            identifier: args[0],
+            value: args[1],
+          }
+          AST.body.push(declaration)
           break
         default:
           throw current_token.value + ' is not a valid command'

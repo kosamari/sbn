@@ -31,20 +31,24 @@ function lexer (code) {
 
 function parser (tokens) {
 
-  function findArguments(expressionType, expectedLength, currentPosition, currentList) {
+  function findArguments(command, expectedLength, expectedType, currentPosition, currentList) {
     currentPosition = currentPosition || 0
     currentList = currentList || []
     while (expectedLength > currentPosition) {
       var token = tokens.shift()
-      if(!token || token.type === 'word') {
-        throw expressionType + ' takes ' + expectedLength + ' number(s) as argument.' + (token ? 'Instead found a word "' + token.value + '".' : '')
+      var expected = typeof expectedType === 'object' ? expectedType[currentPosition] : null
+      if (!token) {
+        throw command + ' takes ' + expectedLength + ' argument(s). '
       }
-      if(token.value < 0 || token.value > 100){
-        throw 'Found value ' + token.value + ' for ' + expressionType + '. Value must be between 0 - 100.'
+      if (expected && token.type !== expected) {
+        throw command + ' takes ' + expected + ' as argument ' + (currentPosition + 1) + '. ' + (token ? 'Instead found a ' + token.type + ' '+ (token.value || '') + '.' : '')
+      }
+      if (token.type === 'number' && (token.value < 0 || token.value > 100)){
+        throw 'Found value ' + token.value + ' for ' + command + '. Value must be between 0 - 100.'
       }
       currentList.push({
-          type: 'NumberLiteral',
-          value: token.value
+        type: token.type,
+        value: token.value
       })
       currentPosition++
     }
@@ -117,6 +121,16 @@ function parser (tokens) {
           expression.arguments = expression.arguments.concat(args)
           AST.body.push(expression)
           break
+        case 'Set':
+          var args = findArguments('Set', 2, ['word', 'number'])
+          var declaration = {
+            type: 'VariableDeclaration',
+            name: 'Set',
+            identifier: args[0],
+            value: args[1],
+          }
+          AST.body.push(declaration)
+          break
         default:
           throw current_token.value + ' is not a valid command'
       }
@@ -129,9 +143,18 @@ function parser (tokens) {
 function transformer (ast) {
 
   function makeColor (level) {
-    level = level || 100
-    level = 100 - level
+    if (typeof level === 'undefined') {
+      level = 100
+    }
+    level = 100 - parseInt(level, 10) // flip
     return 'rgb(' + level + '%, ' + level + '%, ' + level + '%)'
+  }
+
+  function findParamValue (p) {
+    if (p.type === 'word') {
+      return variables[p.value]
+    }
+    return p.value
   }
 
   var elements = {
@@ -139,10 +162,10 @@ function transformer (ast) {
       return {
         tag: 'line',
         attr: {
-          x1: param[0].value,
-          y1: 100 - param[1].value,
-          x2: param[2].value,
-          y2: 100 - param[3].value,
+          x1: findParamValue(param[0]),
+          y1: 100 - findParamValue(param[1]),
+          x2: findParamValue(param[2]),
+          y2: 100 - findParamValue(param[3]),
           stroke: makeColor(pen_color_value),
           'stroke-linecap': 'square'
         },
@@ -157,7 +180,7 @@ function transformer (ast) {
           y: 0,
           width: 100,
           height:100,
-          fill: makeColor(param[0].value)
+          fill: makeColor(findParamValue(param[0]))
         },
         body : []
       }
@@ -177,13 +200,17 @@ function transformer (ast) {
   }
 
   var current_pen_color
-  var paper_color
+  // TODO : warning when paper and pen is same color
+
+  var variables = {}
 
   while (ast.body.length > 0) {
     var node = ast.body.shift()
-    if(node.type === 'CallExpression') {
+    if(node.type === 'CallExpression' || node.type === 'VariableDeclaration') {
       if(node.name === 'Pen') {
-        current_pen_color = node.arguments[0].value
+        current_pen_color = findParamValue(node.arguments[0])
+      } else if (node.name === 'Set') {
+        variables[node.identifier.value] = node.value.value
       } else {
         var el = elements[node.name]
         if (!el) {
@@ -247,7 +274,7 @@ function generator (ast) {
 
 var SBN = {}
 
-SBN.VERSION = '0.2.3'
+SBN.VERSION = '0.3.3'
 SBN.lexer = lexer
 SBN.parser = parser
 SBN.transformer = transformer

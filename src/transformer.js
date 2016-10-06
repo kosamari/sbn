@@ -1,9 +1,18 @@
 export function transformer (ast) {
 
   function makeColor (level) {
-    level = level || 100
-    level = 100 - level
+    if (typeof level === 'undefined') {
+      level = 100
+    }
+    level = 100 - parseInt(level, 10) // flip
     return 'rgb(' + level + '%, ' + level + '%, ' + level + '%)'
+  }
+
+  function findParamValue (p) {
+    if (p.type === 'word') {
+      return variables[p.value]
+    }
+    return p.value
   }
 
   var elements = {
@@ -11,10 +20,10 @@ export function transformer (ast) {
       return {
         tag: 'line',
         attr: {
-          x1: param[0].value,
-          y1: 100 - param[1].value,
-          x2: param[2].value,
-          y2: 100 - param[3].value,
+          x1: findParamValue(param[0]),
+          y1: 100 - findParamValue(param[1]),
+          x2: findParamValue(param[2]),
+          y2: 100 - findParamValue(param[3]),
           stroke: makeColor(pen_color_value),
           'stroke-linecap': 'square'
         },
@@ -29,7 +38,7 @@ export function transformer (ast) {
           y: 0,
           width: 100,
           height:100,
-          fill: makeColor(param[0].value)
+          fill: makeColor(findParamValue(param[0]))
         },
         body : []
       }
@@ -49,13 +58,17 @@ export function transformer (ast) {
   }
 
   var current_pen_color
-  var paper_color
+  // TODO : warning when paper and pen is same color
+
+  var variables = {}
 
   while (ast.body.length > 0) {
     var node = ast.body.shift()
-    if(node.type === 'CallExpression') {
+    if(node.type === 'CallExpression' || node.type === 'VariableDeclaration') {
       if(node.name === 'Pen') {
-        current_pen_color = node.arguments[0].value
+        current_pen_color = findParamValue(node.arguments[0])
+      } else if (node.name === 'Set') {
+        variables[node.identifier.value] = node.value.value
       } else {
         var el = elements[node.name]
         if (!el) {
