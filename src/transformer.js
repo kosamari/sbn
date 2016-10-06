@@ -53,7 +53,14 @@ export function transformer (ast) {
       if(node.name === 'Pen') {
         current_pen_color = node.arguments[0].value
       } else {
-        newAST.body.push(elements[node.name](node.arguments, current_pen_color))
+        var el = elements[node.name]
+        if (!el) {
+          throw node.name + ' is not a valid command.'
+        }
+        if (typeof !current_pen_color === 'undefined') {
+          throw 'Please define Pen before drawing Line.'
+        }
+        newAST.body.push(el(node.arguments, current_pen_color))
       }
     }
   }
