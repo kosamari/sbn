@@ -7,16 +7,18 @@
 // \s : matches any whitespace character (equal to [\r\n\t\f\v ])
 //  + : match previous condition for one and unlimited times
 function lexer (code) {
-  var _tokens = code.split(/\s+/)
+  var _tokens = code.replace(/[\n\r]/g, ' [nl] ').split(/[\t\f\v ]+/)
   var tokens = []
-
   for (var i = 0; i < _tokens.length; i++) {
-    if(isNaN(_tokens[i])) {
-      if(_tokens[i].length > 0) {
-        tokens.push({type: 'word', value: _tokens[i]})
+    var t = _tokens[i]
+    if(t.length <= 0 || isNaN(t)) {
+      if (t === '[nl]') {
+        tokens.push({type: 'newline'})
+      }else if(t.length > 0) {
+        tokens.push({type: 'word', value: t})
       }
     } else {
-      tokens.push({type: 'number', value: _tokens[i]})
+      tokens.push({type: 'number', value: t})
     }
   }
 
@@ -60,6 +62,18 @@ function parser (tokens) {
     var current_token = tokens.shift()
     if (current_token.type === 'word') {
       switch (current_token.value) {
+        case '//' :
+          var expression = {
+            type: 'CommentExpression',
+            value: ''
+          }
+          var next = tokens.shift()
+          while (next.type !== 'newline') {
+            expression.value += next.value + ' '
+            next = tokens.shift()
+          }
+          AST.body.push(expression)
+          break
         case 'Paper' :
           if (paper) {
             throw 'You can not define Paper more than once'
@@ -126,10 +140,11 @@ function transformer (ast) {
         tag: 'line',
         attr: {
           x1: param[0].value,
-          y1: param[1].value,
+          y1: 100 - param[1].value,
           x2: param[2].value,
-          y2: param[3].value,
-          stroke: makeColor(pen_color_value)
+          y2: 100 - param[3].value,
+          stroke: makeColor(pen_color_value),
+          'stroke-linecap': 'square'
         },
         body: []
       }
@@ -232,7 +247,7 @@ function generator (ast) {
 
 var SBN = {}
 
-SBN.VERSION = '0.0.2'
+SBN.VERSION = '0.2.2'
 SBN.lexer = lexer
 SBN.parser = parser
 SBN.transformer = transformer
