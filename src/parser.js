@@ -81,10 +81,12 @@ export function parser (tokens) {
           break
         case 'Line':
           if(!paper) {
-            throw 'Please define Paper before drawing Line'
+            // throw 'Please make Paper 1st'
+            // TODO : no error message 'You should make paper first'
           }
           if(!pen) {
-            throw 'Please define Pen before drawing Line'
+            // throw 'Please define Pen 1st'
+            // TODO : no error message 'You should set pen color first'
           }
           var expression = {
             type: 'CallExpression',
