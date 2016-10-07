@@ -92,7 +92,7 @@ export function parser (tokens) {
         type: token.type,
         value: token.value
       }
-      if (token.type === 'open bracket') {
+      if (token.type === 'ob') {
         arg = createDot(token)
       }
       currentList.push(arg)
@@ -180,7 +180,7 @@ export function parser (tokens) {
           AST.body.push(expression)
           break
         case 'Set':
-          var args = findArguments('Set', 2, [['word', 'open bracket'], 'number'])
+          var args = findArguments('Set', 2, [['word', 'ob'], 'number'])
           var obj = {}
           if (args[0].type === 'dot') {
             AST.body.push({

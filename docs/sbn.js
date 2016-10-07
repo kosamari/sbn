@@ -98,7 +98,7 @@ function parser (tokens) {
         type: token.type,
         value: token.value
       }
-      if (token.type === 'open bracket') {
+      if (token.type === 'ob') {
         arg = createDot(token)
       }
       currentList.push(arg)
@@ -186,7 +186,7 @@ function parser (tokens) {
           AST.body.push(expression)
           break
         case 'Set':
-          var args = findArguments('Set', 2, [['word', 'open bracket'], 'number'])
+          var args = findArguments('Set', 2, [['word', 'ob'], 'number'])
           var obj = {}
           if (args[0].type === 'dot') {
             AST.body.push({
@@ -248,7 +248,8 @@ function transformer (ast) {
           y1: 100 - findParamValue(param[1]),
           x2: findParamValue(param[2]),
           y2: 100 - findParamValue(param[3]),
-          stroke: makeColor(pen_color_value)
+          stroke: makeColor(pen_color_value),
+          'stroke-linecap':'round'
         },
         body: []
       }

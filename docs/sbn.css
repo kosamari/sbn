@@ -69,7 +69,7 @@ svg {
   border-left:none;
   padding:5px;
   width:100%;
-  min-height: 400px;
+  height: 400px;
 }
 
 #code .CodeMirror {
