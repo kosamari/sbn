@@ -9,7 +9,7 @@ This compiler is work-in-progress. Here is a list of commands currently supporte
 - [x] `Line`
 - [x] `// comment`
 - [x] `Set` (variable)
-- [ ] `{ }` (block)
+- [x] `{ }` (block)
 - [ ] Nested block
 - [ ] `Repeat`
 - [ ] `(+ - / *)` (calculations)

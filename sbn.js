@@ -248,8 +248,7 @@ function transformer (ast) {
           y1: 100 - findParamValue(param[1]),
           x2: findParamValue(param[2]),
           y2: 100 - findParamValue(param[3]),
-          stroke: makeColor(pen_color_value),
-          'stroke-linecap': 'square'
+          stroke: makeColor(pen_color_value)
         },
         body: []
       }
@@ -356,7 +355,7 @@ function generator (ast) {
 
 var SBN = {}
 
-SBN.VERSION = '0.5.3'
+SBN.VERSION = '0.5.4'
 SBN.lexer = lexer
 SBN.parser = parser
 SBN.transformer = transformer
