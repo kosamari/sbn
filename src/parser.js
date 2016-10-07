@@ -15,13 +15,13 @@ export function lexer (code) {
       if (t === '*nl*') {
         tokens.push({type: 'newline'})
       } else if (t === '*ob*') {
-        tokens.push({type: 'open bracket'})
+        tokens.push({type: 'ob'})
       } else if (t === '*cb*') {
-        tokens.push({type: 'close bracket'})
+        tokens.push({type: 'cb'})
       } else if (t === '*ocb*') {
-        tokens.push({type: 'open curly brace'})
+        tokens.push({type: 'ocb'})
       } else if (t === '*ccb*') {
-        tokens.push({type: 'close curly brace'})
+        tokens.push({type: 'ccb'})
       } else if(t.length > 0) {
         tokens.push({type: 'word', value: t})
       }
@@ -47,7 +47,7 @@ export function parser (tokens) {
   }
 
   function createDot (current_token, currentPosition, node) {
-    var expectedType = ['open bracket', 'number', 'number', 'close bracket']
+    var expectedType = ['ob', 'number', 'number', 'cb']
     var expectedLength = 4
     currentPosition = currentPosition || 0
     node = node || {type: 'dot'}
@@ -101,11 +101,6 @@ export function parser (tokens) {
     return currentList
   }
 
-  function findBlockElements(currentToken) {
-    
-  }
-
-
   var AST = {
     type: 'Drawing',
     body: []
@@ -118,10 +113,14 @@ export function parser (tokens) {
     if (current_token.type === 'word') {
       switch (current_token.value) {
         case '{' :
-          var body = findBlockElements(current_token)
           var block = {
-            type: 'Block',
-            body : body
+            type: 'Block Start'
+          }
+          AST.body.push(block)
+          break
+        case '}' :
+          var block = {
+            type: 'Block End'
           }
           AST.body.push(block)
           break
@@ -209,7 +208,7 @@ export function parser (tokens) {
         default:
           throw current_token.value + ' is not a valid command'
       }
-    } else if (current_token.type !== 'newline') {
+    } else if (['newline', 'ocb', 'ccb'].indexOf[current_token.type] < 0 ) {
       throw 'Unexpected token type : ' + current_token.type
     }
   }
