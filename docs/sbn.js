@@ -11,6 +11,8 @@ function lexer (code) {
                   .replace(/[\n\r]/g, ' *nl* ')
                   .replace(/\[/g, ' *ob* ')
                   .replace(/\]/g, ' *cb* ')
+                  .replace(/\{/g, ' *ocb* ')
+                  .replace(/\}/g, ' *ccb* ')
                   .split(/[\t\f\v ]+/)
   var tokens = []
   for (var i = 0; i < _tokens.length; i++) {
@@ -19,9 +21,13 @@ function lexer (code) {
       if (t === '*nl*') {
         tokens.push({type: 'newline'})
       } else if (t === '*ob*') {
-        tokens.push({type: 'open bracket'})
+        tokens.push({type: 'ob'})
       } else if (t === '*cb*') {
-        tokens.push({type: 'close bracket'})
+        tokens.push({type: 'cb'})
+      } else if (t === '*ocb*') {
+        tokens.push({type: 'ocb'})
+      } else if (t === '*ccb*') {
+        tokens.push({type: 'ccb'})
       } else if(t.length > 0) {
         tokens.push({type: 'word', value: t})
       }
@@ -47,7 +53,7 @@ function parser (tokens) {
   }
 
   function createDot (current_token, currentPosition, node) {
-    var expectedType = ['open bracket', 'number', 'number', 'close bracket']
+    var expectedType = ['ob', 'number', 'number', 'cb']
     var expectedLength = 4
     currentPosition = currentPosition || 0
     node = node || {type: 'dot'}
@@ -112,6 +118,18 @@ function parser (tokens) {
     var current_token = tokens.shift()
     if (current_token.type === 'word') {
       switch (current_token.value) {
+        case '{' :
+          var block = {
+            type: 'Block Start'
+          }
+          AST.body.push(block)
+          break
+        case '}' :
+          var block = {
+            type: 'Block End'
+          }
+          AST.body.push(block)
+          break
         case '//' :
           var expression = {
             type: 'CommentExpression',
@@ -196,7 +214,7 @@ function parser (tokens) {
         default:
           throw current_token.value + ' is not a valid command'
       }
-    } else if (current_token.type !== 'newline') {
+    } else if (['newline', 'ocb', 'ccb'].indexOf[current_token.type] < 0 ) {
       throw 'Unexpected token type : ' + current_token.type
     }
   }
@@ -338,7 +356,7 @@ function generator (ast) {
 
 var SBN = {}
 
-SBN.VERSION = '0.4.3'
+SBN.VERSION = '0.5.3'
 SBN.lexer = lexer
 SBN.parser = parser
 SBN.transformer = transformer
