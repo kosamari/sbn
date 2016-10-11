@@ -1,10 +1,10 @@
 {
-  "name": "sbn",
+  "name": "simple-sbn",
   "version": "0.0.1",
   "description": "A compiler for small drawing language sbn(SVG by Numbers). Inspired by John Maeda's book: Design by Numbers.",
-  "main": "sbn.js",
+  "main": "simple_sbn.js",
   "scripts": {
-    "build": "rollup ./src/compiler.js  -n SBN -f umd -o sbn.js"
+    "build": "rollup ./src/compiler.js  -n sbn -f umd -o simple_sbn.js"
   },
   "author": "kosamari (http://twitter.com/kosamari)",
   "license": "Apache-2.0",
