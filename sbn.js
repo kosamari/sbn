@@ -107,6 +107,24 @@ function parser (tokens) {
     return currentList
   }
 
+  function variablesDefined (variables) {
+    var defined = false
+    for (var i = 0; i < variables.length; i++) {
+      for (var j = 0; j < AST.body.length; j++) {
+        if (variables[i].value == AST.body[j].identifier.value) {
+          defined = true
+          break
+        }
+      }
+      if (defined) {
+        defined = false
+      } else {
+        return false
+      }
+    }
+    return true
+  }
+
   var AST = {
     type: 'Drawing',
     body: []
@@ -153,8 +171,12 @@ function parser (tokens) {
           }
           var args = findArguments('Paper', 1)
           expression.arguments = expression.arguments.concat(args)
-          AST.body.push(expression)
-          paper = true
+          if (variablesDefined(expression.arguments)) {
+            AST.body.push(expression)
+            paper = true
+          } else {
+            throw 'using 1 or more variables before they are defined'
+          }
           break
         case 'Pen' :
           var expression = {
@@ -208,7 +230,6 @@ function parser (tokens) {
             obj.identifier = args[0]
             obj.value = args[1]
           }
-
           AST.body.push(obj)
           break
         default:
